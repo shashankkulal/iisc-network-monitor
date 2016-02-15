@@ -1,0 +1,5 @@
+import os, re
+
+os.system('wget -O /dev/null http://speedtest.wdc01.softlayer.com/downloads/test10.zip -o temp/bandwidth.log');
+os.system("cat temp/bandwidth.log | grep '/s' | grep -Po '(?<=\().*(?=\))' | awk -F' ' '{print $1}'")
+
