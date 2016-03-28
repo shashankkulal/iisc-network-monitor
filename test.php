@@ -1,4 +1,6 @@
-<?php
-$load = sys_getloadavg();
-echo $load[0];
+
+<?php 
+$m = new MongoClient();
+$db = $m->mydb;
+echo "Database selected";
 ?>

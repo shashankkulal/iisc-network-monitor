@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "dese";
+$password = "1$=46.10RupeesSQL";
 $database = "iisc";
 
 $db = new mysqli($host, $username, $password, $database);

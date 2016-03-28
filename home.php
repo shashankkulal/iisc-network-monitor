@@ -9,6 +9,7 @@
     $s3 = getpacketloss('10.16.40.113', '1');
     $dns1 = getpacketloss('10.16.25.13', '1');
     $dns2 = getpacketloss('10.16.25.15', '1');
+    $gib = getInternetBandwidth();
     $status_array = array();
     array_push($status_array, $s1, $s2, $s3, $dns1, $dns2);
     foreach($status_array as $value)
@@ -16,6 +17,10 @@
         if($value > 0) $status = '1'; else $status = '0';
     }
     $_SESSION['status'] = $status;
+    if(!isset($gib))
+    {
+        $_SESSION['status'] == 1;
+    }
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -202,7 +207,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                         <?php if($status == '0') { ?>
                         <img src="images/green.gif" />
                         <img src="images/redoff.gif" />
-                        <span style="color:green; font-size: 20px;">Every thing working fine.</span></span>
+                        <span style="color:green; font-size: 20px;">All Ok.!!</span></span>
                         <?php
                         }
                         else
@@ -220,13 +225,18 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	
 
 			<div class="blank-page">
-                <h3>Internet Bandwidth</h3>
+                <h3>Internet Speed<span style="color:blue; font-size:12px;"><span><a href="internet_bandwidth.php"> (More Details)</a></span></h3>
+		<?php echo getSpeedCharacter($gib); ?>
                 
                 <div class="row show-grid">
                   <div class="col-md-6" style="text-align:center;">
+                      <?php  
+                        if($gib)
+                        {
+                      ?>
                       <img src="images/fine2.gif" />
-                      <h1 style="color:#1E90FF;"><?php echo getInternetBandwidth(); ?> MB/s</h1>
-                      
+                      <?php } ?>
+                      <?php if($gib) echo "<h1 style='color:#1E90FF;'>$gib MB/s</h1><p>Nearest Server (Internode)</p>"; else echo"<span style='color:red;'>NOT WORKING. Check last <a href='http://localhost/python_engine/temp/bandwidth.log'>log here.</a></span>"; ?>
                         <?php
                             $u = time();
                       ?>
@@ -236,7 +246,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                                     url: 'php_scripts/lastupdate.php?u=<?php echo $u; ?>',
                                     success: function(data) {
                                       // do something with the return value here if you like
-                                      $("#lastupdatediv").html(data);
+                                      $(".lastupdatediv").html(data);
                                     }
                                   });
                                   setTimeout(executeQuery, 5000);
@@ -245,12 +255,24 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                                  setTimeout(executeQuery, 5000);
                                 });
                                  </script>
-                      <h5>Last Update: <span id="lastupdatediv" style="font-weight: bold; color: brown;"></span> seconds ago.</h5>
+                      <h5>Last Update: <span class="lastupdatediv" style="font-weight: bold; color: brown;"></span> seconds ago.</h5>
                     </div>
-                  <div class="col-md-6" style="text-align:center;"><img src="python_engine/images/proxy_ib.png" /></div>
+                  <div class="col-md-6" style="text-align:center;">
+			<?php
+				$rs=$db->query("select avg(down),avg(up) from speedtest where status='1'");
+				while($row=$rs->fetch_array())
+				{
+					$internet_avg_down = $row[0]/8;
+				}
+			?>
+			<h4>Internet Speed <span style="color:orange;">Selected Server (Average)</span></h4><br><br>
+			<h5>Download Speed</h5><br>
+			<h1 style='color:#1E90FF;'><?php echo round($internet_avg_down,2); ?> MB/s</h1><br><br>
+                      <h5>Last Update: <span class="lastupdatediv" style="font-weight: bold; color: brown;"></span> seconds ago.</h5>
+		</div>
                 </div>
                 
-                <h3>DNS Services</h3>
+                <h3>DNS Services<span style="color:blue; font-size:12px;"><a href="dns_services.php"> (More Details)</a></span></h3>
                 <div class="row show-grid">
                   <div class="col-md-6" style="text-align:center;">
                       <div id="dns_loss" style="width: 400px; height: 120px; margin-left: auto; margin-right:auto;"></div>
@@ -267,7 +289,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                 </div>
                 
                 
-                <h3>proxy.iisc.ernet.in</h3>
+                <h3>Proxy Services<span style="color:blue; font-size:12px;"><a href="proxy_services.php"> (More Details)</a></span></h3>
                 <div class="row show-grid">
                   <div class="col-md-6" style="text-align:center;">
                       <div id="chart_div" style="width: 400px; height: 120px; margin-left: auto; margin-right:auto;"></div>

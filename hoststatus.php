@@ -301,7 +301,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                         {
                         ?>
                             <tr>
-                                <td><?php echo $i; ?></td>
+                                <td><?php echo $i; $i+=1; ?></td>
                                 <td><?php echo $row['ip']; ?></td>
                                 <td><?php echo $row['hname']; ?></td>
                                 <td><?php $ps = getpacketloss($row['ip'], '1');
@@ -310,6 +310,21 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                                 <td><a href="">Delete</a></td>
                             </tr>
                     <?php
+                        }
+                        $rs = $db->query("select *from tree");
+                        while($row = $rs->fetch_array())
+                        {
+                            ?>
+                            <tr>
+                                <td><?php echo $i; $i+=1; ?></td>
+                                <td><?php echo $row['ip']; ?></td>
+                                <td><?php if(isset($row['fname'])) echo $row['fname']; else echo $row['sname']; ?></td>
+                                <td><?php $ps = getpacketloss($row['ip'], '1');
+                                        if($ps == '0') echo "<span style='color:green;'>UP</span>"; else echo "<span style='color:red;'>DOWN</span>";
+                                    ?></td>
+                                <td><a href="">Delete</a></td>
+                            </tr>
+                            <?php
                         }
                     ?>
                 </table>

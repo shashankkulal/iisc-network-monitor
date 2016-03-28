@@ -1,12 +1,20 @@
+#!/usr/bin/env python
 import os, re
+import mysql.connector
 import rrdtool
+import settings
+
+working_dir = "/var/www/html/python_engine"
+os.chdir(working_dir)
 
 def internet_bandwidth():
-	os.system('wget -O /dev/null http://speedtest.wdc01.softlayer.com/downloads/test10.zip -o temp/bandwidth.log');
+	os.system('wget -O /dev/null http://mirror.internode.on.net/pub/test/5meg.test1 -o temp/bandwidth.log');
 	os.system("cat temp/bandwidth.log | grep '/s' | grep -Po '(?<=\().*(?=\))' | awk -F' ' '{print $1}' > temp/speed.txt")
 
+#internet_bandwidth()
 # Graphs for Internet Bandwidth
 def internet_bandwidth_graph():
+	color = str(settings.get_color())
 	if not os.path.exists('database/proxy_ib.rrd'):
 		rrdtool.create("database/proxy_ib.rrd", "--step", "300", "--start", "0",
 		"DS:speed:GAUGE:600:U:U",
@@ -19,8 +27,38 @@ def internet_bandwidth_graph():
 	f = open("temp/speed.txt").readline().rstrip()
 	rrdtool.update("database/proxy_ib.rrd","N:%s" % f)
 	rrdtool.graph("images/proxy_ib.png", "-a", "PNG", "--title",
-	"Internet Bandwidth",
+	"Internet Bandwidth", "--width", "900", "--height", "200",
 	"--vertical-label", "MB/s",
 	"DEF:sp=database/proxy_ib.rrd:speed:AVERAGE",
-	"LINE1:sp#800000:Speed"
+	"AREA:sp"+color+":Speed"
+	)
+	rrdtool.graph("images/proxy_ib1hr.png", "-a", "PNG", "--title",
+	"Internet Bandwidth", "--start", "end-1h", "--width", "900", "--height", "200",
+	"--vertical-label", "MB/s",
+	"DEF:sp=database/proxy_ib.rrd:speed:AVERAGE",
+	"AREA:sp"+color+":Speed"
+	)
+	rrdtool.graph("images/proxy_ib1week.png", "-a", "PNG", "--title",
+	"Internet Bandwidth", "--end", "00:00", "--start", "end-1w", "--width", "900", "--height", "200",
+	"--vertical-label", "MB/s",
+	"DEF:sp=database/proxy_ib.rrd:speed:AVERAGE",
+	"AREA:sp"+color+":Speed"
+	)
+	rrdtool.graph("images/proxy_ib4week.png", "-a", "PNG", "--title",
+	"Internet Bandwidth", "--end", "00:00", "--start", "end-4w", "--width", "900", "--height", "200",
+	"--vertical-label", "MB/s",
+	"DEF:sp=database/proxy_ib.rrd:speed:AVERAGE",
+	"AREA:sp"+color+":Speed"
+	)
+	rrdtool.graph("images/proxy_ib24week.png", "-a", "PNG", "--title",
+	"Internet Bandwidth", "--end", "00:00", "--start", "end-24w", "--width", "900", "--height", "200",
+	"--vertical-label", "MB/s",
+	"DEF:sp=database/proxy_ib.rrd:speed:AVERAGE",
+	"AREA:sp"+color+":Speed"
+	)
+	rrdtool.graph("images/proxy_ib1year.png", "-a", "PNG", "--title",
+	"Internet Bandwidth", "--end", "00:00", "--start", "end-1y", "--width", "900", "--height", "200",
+	"--vertical-label", "MB/s",
+	"DEF:sp=database/proxy_ib.rrd:speed:AVERAGE",
+	"AREA:sp"+color+":Speed"
 	)

@@ -1,5 +1,4 @@
-import os, re
-
-os.system('wget -O /dev/null http://speedtest.wdc01.softlayer.com/downloads/test10.zip -o temp/bandwidth.log');
-os.system("cat temp/bandwidth.log | grep '/s' | grep -Po '(?<=\().*(?=\))' | awk -F' ' '{print $1}'")
-
+import subprocess
+p = subprocess.Popen(["./speedtest_cli.py", "--server", "6303"], stdout=subprocess.PIPE)
+output, err = p.communicate()
+print  output

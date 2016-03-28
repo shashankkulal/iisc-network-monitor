@@ -1,0 +1,2 @@
+cd python_engine
+python speedtest_cli.py --server 6303 --simple

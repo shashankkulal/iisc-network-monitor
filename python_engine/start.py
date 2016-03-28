@@ -1,16 +1,25 @@
+#!/usr/bin/env python
 import mysql.connector
 import os
 import time
 import rrdtool
 import subprocess
 import re
+import sys
 import functions
+import pinggraph
+import tree
+import settings
+import i_speed
 
-
+working_dir = "/var/www/html/python_engine"
+os.chdir(working_dir)
+print(os.getcwd() + "\n")
+cwd = os.getcwd()
+database_path = os.path.join(cwd, "database/")
 #Create Database
 def create_database(dbname):
-	print "[*] Creating Database for %s" % dbname
-	rrdtool.create("database/" + dbname + ".rrd",
+	rrdtool.create(database_path + dbname + ".rrd",
 	"--step","300",
 	"--start","0",
 	"DS:pmin:GAUGE:600:U:U",
@@ -24,7 +33,6 @@ def create_database(dbname):
 	)
 	
 def update_database(host):
-	print "[*] Updating Database %s.rrd" % host
 	output = subprocess.check_output("ping " + host + " -c 1 -q  | egrep \"packet loss|rtt\"", shell=True)
 
 	match = re.search('([\d]*\.[\d]*)/([\d]*\.[\d]*)/([\d]*\.[\d]*)/([\d]*\.[\d]*)', output)
@@ -33,67 +41,86 @@ def update_database(host):
 		ping_avg = str(match.group(2))
 		ping_max = str(match.group(3))
 	except:
-		ping_min = "0"
-		ping_avg = "0"
-		ping_max = "0"
+		ping_min = "100"
+		ping_avg = "100"
+		ping_max = "100"
 
 	match = re.search('(\d*)% packet loss', output)
 	pkt_loss = float(match.group(1))
-	host = "database/%s.rrd" % host
+	host = "%s/%s.rrd" % (database_path, host)
 	rrdtool.update(host, "N:%s:%s:%s:%s" % (ping_min, ping_avg, ping_max, pkt_loss))
 	
 
-def graph_for_ping(host):
-	print "[*] Generating Graphs for %s" % host
+def graph_for_ping(host,c):
+	c = str(c)
 	image = "images/ping_statistics_%s.png" % host
-	host = "database/%s.rrd" % host
-	rrdtool.graph(image,"-a", "PNG", "--title", "Ping Statistics","--vertical-label", "Time",
+	host = "%s/%s.rrd" % (database_path, host)
+	rrdtool.graph(image,"-a", "PNG", "--title", "Ping Statistics","--vertical-label", "Time", "--watermark", "date",
 	"DEF:pmi="+host+":pmin:AVERAGE",
-	"LINE1:pmi#800000:Min",
+	"AREA:pmi"+c+":Min",
 	"DEF:pav="+host+":pavg:AVERAGE",
-	"LINE1:pav#0000ff:Avg",
+	"AREA:pav"+c+":Avg",
 	"DEF:pmx="+host+":pmax:AVERAGE",
-	"LINE1:pmx#ff0000:Max")
+	"AREA:pmx"+c+":Max")
 
 
-#Ping Every 1 Minute and create database if not exist.
+#Ping Every 1 Minute and create database if not exist.1$=46.10RupeesSQL
 def check_database():
-	cnx = mysql.connector.connect(user='root', password='dese', host='localhost', database='iisc')
+	cnx = mysql.connector.connect(user='root', password='1$=46.10RupeesSQL', host='localhost', database='iisc')
 	cursor = cnx.cursor()
 	cursor.execute("select ip from host")
 	for ip in cursor:
-		if not os.path.exists('database/' + str(ip[0]) + ".rrd"):
-			create_database(str(ip[0]))
-			
+		if ip:
+			if not os.path.exists(database_path + str(ip[0]) + ".rrd"):
+				create_database(str(ip[0]))
+		else:
+			pass
 	cursor.close()
 	cnx.close()
 
 
-def do_ping():
+def do_ping(color):
 	check_database()
-	cnx = mysql.connector.connect(user='root', password='dese', host='localhost', database='iisc')
+	cnx = mysql.connector.connect(user='root', password='1$=46.10RupeesSQL', host='localhost', database='iisc')
 	cursor = cnx.cursor()
 	cursor.execute("select ip from host")
 	for ip in cursor:
-		update_database(str(ip[0]))
-		graph_for_ping(str(ip[0]))			
+		if ip:
+			update_database(str(ip[0]))
+			graph_for_ping(str(ip[0]),color)
+		else:
+			pass			
 	cursor.close()
 	cnx.close()
-
-i = 1
-while True:
-	do_ping()
-	print "[*] Ping done %r times" % i
-	time.sleep(10)
-	i += 1
-	functions.internet_bandwidth()
-	functions.internet_bandwidth_graph()
-
-
-
-
-
-
-
-
+print """
+|_ _|_ _/ ___|  ___  | \ | | ___| |___      _____  _ __| | __
+ | | | |\___ \ / __| |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ /
+ | | | | ___) | (__  | |\  |  __/ |_ \ V  V / (_) | |  |   < 
+|___|___|____/ \___| |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\
+	                                                     
+ __  __             _ _             
+|  \/  | ___  _ __ (_) |_ ___  _ __ 
+| |\/| |/ _ \| '_ \| | __/ _ \| '__|
+| |  | | (_) | | | | | || (_) | | Version: 0.2  
+|_|  |_|\___/|_| |_|_|\__\___/|_| By: Shashank Suresh Kulal
+"""
+#i = 1
+#while True:
+color = settings.get_color()
+do_ping(color)
+	#sys.stdout.write("Ping done %s times.\r" % str(i))
+	#sys.stdout.flush()
+	#i += 1
+print "Entering Bandwidth function"
+functions.internet_bandwidth()
+print "Entering Bandwidth function"
+functions.internet_bandwidth_graph()
+print "Entering pingraph"
+pinggraph.get_host()
+print "Entering tree ping"
+tree.do_ping()
+	#time.sleep(60)
+i_speed.check_db()
+print "Exiting python script"
+sys.exit(0)
 
